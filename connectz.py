@@ -2,14 +2,14 @@ import sys
 from functools import lru_cache
 
 """
-Generalisation of connect 4 to arbirary board size and win-length
+Generalisation of connect 4 to arbirary board-size and win-length
 
 Classes and functions:
 
     WinChecker:
         checks if a board contains a win for either player
 
-    ConnectZGame:
+    Game:
         tracks the state of moves in a game
 
     parse_and_play:
@@ -51,8 +51,6 @@ def parse_input(input_file_path):
     """
     Loads game-dimensions and moves from input file - game dimensions first row, all other rows are moves
 
-    NOTE - invalid or non-existant files raise assertion errors with message specifying reason
-
     Args:
         input_file_path (string): path to text file with game
 
@@ -67,7 +65,6 @@ def parse_input(input_file_path):
             file_text = input_file.read()
     except:
         raise AssertionError("file error")
-
     try:
         file_lines = file_text.split("\n")
         game_dimensions = file_lines[0].split(" ")
@@ -77,36 +74,28 @@ def parse_input(input_file_path):
         raise AssertionError("invalid file")
 
 
-def parse_game_dimensions(game_dimensions):
+def parse_game_dimensions(game_dimensions_raw):
     """
     Loads game-dimensions from raw list
 
-    NOTE - impossible dimensions raise assertion errors with message specifying reason
-
     Args:
-        game_dimensions (list): list of raw inputs
+        game_dimensions_raw (list): list of raw inputs
 
     Returns:
-        (
-            rows (int): rows of board
-            columns (int): columns of board
-            win_length (int): minimum connected row required to win
-        )
+        game_dimensions (tuple): list of game dimensions converted to integers, and validated game is legal     
     """
-    assert len(game_dimensions) == 3, "invalid file"
-    rows = int(game_dimensions[0])
-    columns = int(game_dimensions[1])
-    win_length = int(game_dimensions[2])
+    assert len(game_dimensions_raw) == 3, "invalid file"
+    rows = int(game_dimensions_raw[0])
+    columns = int(game_dimensions_raw[1])
+    win_length = int(game_dimensions_raw[2])
     assert min([rows, columns, win_length]) > 0, "illegal game"
-    assert win_length <= min([rows, columns]), "illegal game"
+    assert win_length <= max([rows, columns]), "illegal game"
     return rows, columns, win_length
 
 
 def parse_and_play(file_path, verbose=False):
     """
     Parses input-file and plays out game
-
-    NOTE - impossible games raise assertion errors with message specifying reason
 
     Args:
         file_path (string): path to file
@@ -117,7 +106,7 @@ def parse_and_play(file_path, verbose=False):
     """
     game_dimensions_raw, moves = parse_input(file_path)
     rows, columns, win_length = parse_game_dimensions(game_dimensions_raw)
-    game = ConnectZGame(rows=rows, columns=columns, win_length=win_length)
+    game = Game(rows=rows, columns=columns, win_length=win_length)
     if verbose:
         print("moves")
         print(moves)
@@ -125,7 +114,6 @@ def parse_and_play(file_path, verbose=False):
         live_status = game.make_move(int(move) - 1)
         if verbose:
             game.show_board()
-        if verbose:
             print(move)
             print(live_status)
     return game.status
@@ -152,11 +140,7 @@ def build_masks(i, j, win_length):
 
 class WinChecker:
     """
-    Checks if a game-board is in the following states:
-        'player 1 win'
-        'player 2 win'
-        'draw'
-        'incomplete'
+    Checks if a game-board is won/drawn/incomplete
 
     Methods:
         check (board):
@@ -225,7 +209,7 @@ class WinChecker:
             return "draw"
 
 
-class ConnectZGame:
+class Game:
     """
     Class tracking Connect-Z Game
 
@@ -233,6 +217,10 @@ class ConnectZGame:
         rows (int): number of rows in board
         columns (int): number of columns in board
         win_length (int): connected sequence needed to win
+
+    Methods:
+        make_move - update game state
+        show_board - print out game board
     """
 
     def __init__(self, rows, columns, win_length):
@@ -293,10 +281,9 @@ def main():
         input_file_path = get_sys_filepath()
         final_game_status = parse_and_play(input_file_path)
         print(GAME_CODES[final_game_status])
-    except AssertionError as e:
+    except AssertionError as error_type:
         # return specified code if failing specific assertion error
-        error_type = str(e)
-        return print(GAME_CODES[error_type])
+        print(GAME_CODES[str(error_type)])
 
 
 if __name__ == "__main__":

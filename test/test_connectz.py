@@ -60,7 +60,7 @@ def test_board_shape():
     """
     Builds correct board shape when initialized
     """
-    game = connectz.ConnectZGame(rows=10, columns=2, win_length=3)
+    game = connectz.Game(rows=10, columns=2, win_length=3)
     assert game.board == fixtures.TEN_BY_TWO_BOARD
 
 
@@ -70,6 +70,13 @@ def test_illegal_game():
     """
     with pytest.raises(AssertionError, match="illegal game"):
         game = connectz.parse_game_dimensions(["7", "6", "0"])
+
+
+def test_legal_game():
+    """
+    Check legal game doesn't raise error
+    """
+    game = connectz.parse_game_dimensions(["7", "1", "6"])
 
 
 def test_illegal_game_2():
@@ -84,7 +91,7 @@ def test_illegal_column():
     """
     Correct error when move has invalid column number
     """
-    game = connectz.ConnectZGame(7, 6, 4)
+    game = connectz.Game(7, 6, 4)
     with pytest.raises(AssertionError, match="illegal column"):
         game.make_move(-1)
 
@@ -93,7 +100,7 @@ def test_illegal_column_2():
     """
     Correct error when move has invalid column number (2)
     """
-    game = connectz.ConnectZGame(7, 6, 4)
+    game = connectz.Game(7, 6, 4)
     with pytest.raises(AssertionError, match="illegal column"):
         game.make_move(8)
 
@@ -102,7 +109,7 @@ def test_illegal_row():
     """
     Correct error when row is overfilled
     """
-    game = connectz.ConnectZGame(7, 6, 4)
+    game = connectz.Game(7, 6, 4)
     with pytest.raises(AssertionError, match="illegal row"):
         for _ in range(8):
             game.make_move(1)
@@ -112,7 +119,7 @@ def test_legal_moves():
     """
     Correct boardstate for sequence of moves
     """
-    game = connectz.ConnectZGame(7, 6, 4)
+    game = connectz.Game(7, 6, 4)
     for move in [1, 1, 2]:
         game.make_move(move)
     assert game.board == fixtures.EXPECTED_LEGAL_MOVE_BOARD

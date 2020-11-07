@@ -42,6 +42,8 @@ The lines after this are the column players moved. Player 1 and Player 2 alterna
     import connectz
     connectz.parse_and_play(PATH_TO_FILE)
 
+set flag verbose = True to print out details of game when moves are played
+
 ## Run tests
 
 To run the tests, a version of pytest needs to be installed.
