@@ -1,5 +1,5 @@
 """
-Config and fixtures for test cases
+Config and fixtures for connect-z test cases
 """
 
 TWO_SYS_ARGS = ["script.py", "first_arg", "second_arg"]
