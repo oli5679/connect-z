@@ -32,15 +32,8 @@ GAME_CODES = {
     "illegal game": 7,
     "invalid file": 8,
     "file error": 9,
+    "invalid sys args": "Provide one input file",
 }
-
-
-class InvalidSysArgsError(AssertionError):
-    """
-    Custom exception to catch cases where the script is run with no arguments or more than one argument rather than specified 1 argument
-    """
-
-    pass
 
 
 def get_sys_filepath():
@@ -50,13 +43,8 @@ def get_sys_filepath():
     returns:
         input_filepath (string) path to input file passed as command-line argument
     """
-    num_inputs = len(sys.argv) - 1
-    if num_inputs != 1:
-        # raise custom error in order to meet specified contract print message
-        raise InvalidSysArgsError
-    else:
-        input_filepath = sys.argv[1]
-        return input_filepath
+    assert len(sys.argv) == 2, "invalid sys args"
+    return sys.argv[1]
 
 
 def parse_input(input_file_path):
@@ -140,7 +128,6 @@ def parse_and_play(file_path, verbose=False):
         if verbose:
             print(move)
             print(live_status)
-
     return game.status
 
 
@@ -256,11 +243,11 @@ class ConnectZGame:
         self.board = [[0 for x in range(rows)] for y in range(columns)]
         self.status = "incomplete"
         self.turn = 1
-        # track how far along columns we have got
+        # track point in each column we will enter counter (bottom-row up)
         self.column_counters = [rows - 1 for x in range(columns)]
         self.win_checker = WinChecker(rows=rows, columns=columns, win_length=win_length)
 
-    def validate_move(self, selected_col):
+    def _validate_move(self, selected_col):
         """
         Checks that move is legal
 
@@ -270,9 +257,8 @@ class ConnectZGame:
         assert selected_col >= 0, "illegal column"
         assert selected_col < self.columns, "illegal column"
         assert self.column_counters[selected_col] > -1, "illegal row"
-        assert (
-            self.status != "player 1 win" and self.status != "player 2 win"
-        ), "illegal continue"
+        assert not (self.status in ["player 1 win", "player 2 win"]), "illegal continue"
+        return True
 
     def make_move(self, selected_col):
         """
@@ -282,20 +268,20 @@ class ConnectZGame:
         Returns:
             current_status (string): game status after updating board with this move
         """
-        self.validate_move(selected_col)
-        row_level = self.column_counters[selected_col]
-        self.board[selected_col][row_level] = self.turn
+        self._validate_move(selected_col)
+        self.board[selected_col][self.column_counters[selected_col]] = self.turn
         self.status = self.win_checker.check(self.board)
+        # next move in column one position higher
         self.column_counters[selected_col] -= 1
+        # next move other player (1/-1)
         self.turn *= -1
         return self.status
 
     def show_board(self):
         """
-        Helper method to display board
-
-        NOTE - transposes because I am using lists to represent columns, to make moving easier
+        Helper method to print out board
         """
+        # transposes because I am using lists to represent columns, to make moving easie
         transposed_board = map(list, zip(*self.board))
         for row in transposed_board:
             print(row)
@@ -307,9 +293,6 @@ def main():
         input_file_path = get_sys_filepath()
         final_game_status = parse_and_play(input_file_path)
         print(GAME_CODES[final_game_status])
-    except InvalidSysArgsError:
-        # print if wrong number of sys args
-        print("Provide one input file")
     except AssertionError as e:
         # return specified code if failing specific assertion error
         error_type = str(e)

@@ -14,7 +14,7 @@ def test_get_input_filepath_two_arguments():
     """
     Error with two command line args
     """
-    with pytest.raises(connectz.InvalidSysArgsError):
+    with pytest.raises(AssertionError, match="invalid sys args"):
         with patch.object(sys, "argv", fixtures.TWO_SYS_ARGS):
             connectz.get_sys_filepath()
 
@@ -23,8 +23,7 @@ def test_get_input_filepath_no_arguments():
     """
     Error with no command line args
     """
-
-    with pytest.raises(connectz.InvalidSysArgsError):
+    with pytest.raises(AssertionError, match="invalid sys args"):
         with patch.object(sys, "argv", fixtures.NO_SYS_ARGS):
             connectz.get_sys_filepath()
 
