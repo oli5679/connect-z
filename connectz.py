@@ -1,5 +1,4 @@
 import sys
-from functools import lru_cache
 
 """
 Generalisation of connect 4 to arbirary board-size and win-length
@@ -13,7 +12,7 @@ Classes and functions:
         tracks the state of moves in a game
 
     parse_and_play:
-        helper_method to specified filepath and plays out game
+        helper_method to load specified filepath and play out game
 
 Command-line example
 
@@ -40,7 +39,7 @@ def get_sys_filepath():
     """
     Gets filepath from command-line arguments
 
-    returns:
+    Returns:
         input_filepath (string) path to input file passed as command-line argument
     """
     assert len(sys.argv) == 2, "invalid sys args"
@@ -121,25 +120,6 @@ def parse_and_play(file_path, verbose=False):
     return game.status
 
 
-@lru_cache()
-def build_masks(i, j, win_length):
-    """
-    Builds masks to check for wins in sub-board.
-
-    These indexes will be checked if they are all 1/-1
-
-    Args:
-        i (int): starting column index
-        j (int): starting row index
-        win_length (int): length of sequence needed to win
-    """
-    right_mask = [[i, j + n] for n in range(win_length)]
-    down_mask = [[i + n, j] for n in range(win_length)]
-    diagonal_mask = [[i + n, j + n] for n in range(win_length)]
-    inverse_diagonal_mask = [[i - n + win_length - 1, j + n] for n in range(win_length)]
-    return [right_mask, down_mask, diagonal_mask, inverse_diagonal_mask]
-
-
 class StatusChecker:
     """
     Checks if a game-board is won/drawn/incomplete
@@ -160,6 +140,24 @@ class StatusChecker:
         self.columns = columns
         self.win_length = win_length
 
+    def _build_masks(self, i, j):
+        """
+        Builds masks to check for wins in sub-board (horizontal, vertical and both diagonals).
+
+        These indexes will be checked if they are all 1/-1
+
+        Args:
+            i (int): starting column index
+            j (int): starting row index
+        """
+        right_mask = [[i, j + n] for n in range(self.win_length)]
+        down_mask = [[i + n, j] for n in range(self.win_length)]
+        diagonal_mask = [[i + n, j + n] for n in range(self.win_length)]
+        inverse_diagonal_mask = [
+            [i - n + self.win_length - 1, j + n] for n in range(self.win_length)
+        ]
+        return [right_mask, down_mask, diagonal_mask, inverse_diagonal_mask]
+
     def _square_contains_win(self, i, j, board):
         """
         Checking if a subsquare starting at point i,j in the board
@@ -170,9 +168,7 @@ class StatusChecker:
             j (int): subboard starting row index
             board (list): board to check
         """
-
-        # the win directions (horizontal, vertical, both diagonals) can be represented by masks of their indexes
-        masks = build_masks(i, j, self.win_length)
+        masks = self._build_masks(i, j)
         for mask in masks:
             try:
                 # if a mask sums to +- the win-length, this player has won
@@ -200,7 +196,6 @@ class StatusChecker:
         # The board above this can be discarded, since it contains only zeros.
         highest_non_zero = max((sum((abs(x) for x in c)) for c in board))
         filtered_board = [row[0:highest_non_zero] for row in board]
-
         # check all cells
         for i in range(self.columns):
             for j in range(highest_non_zero):
@@ -234,20 +229,21 @@ class Game:
         self.rows = rows
         self.columns = columns
         self.win_length = win_length
-        # start with empty board, incomplete status and player-1 move
+        # start with empty board, 'incomplete' status, player-1 to move and 0 counters in every col
         self.board = [[0 for x in range(rows)] for y in range(columns)]
         self.status = "incomplete"
         self.turn = 1
-        # track point in each column we will enter counter (bottom-row up)
         self.column_counters = [0 for x in range(columns)]
-        self.status_checker = StatusChecker(rows=rows, columns=columns, win_length=win_length)
+        self.status_checker = StatusChecker(
+            rows=rows, columns=columns, win_length=win_length
+        )
 
     def _validate_move(self, selected_col):
         """
         Checks that move is legal
 
         Returns:
-            True if move is legal, otherwise raises assertion-error
+            True if move is legal, otherwise raises AssertionError
         """
         assert selected_col >= 0, "illegal column"
         assert selected_col < self.columns, "illegal column"
