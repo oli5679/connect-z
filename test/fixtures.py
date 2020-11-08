@@ -25,6 +25,7 @@ LEGAL_GAMES = [
     ("test/games/valid_no_move.txt", "incomplete"),
     ("test/games/valid_win_player_1.txt", "player 1 win"),
     ("test/games/valid_win_player_2.txt", "player 2 win"),
+    ("test/games/complete_game.txt", "player 1 win"),
 ]
 
 ILLEGAL_GAMES = [
@@ -38,8 +39,8 @@ ILLEGAL_GAMES = [
 
 EXPECTED_LEGAL_MOVE_BOARD = [
     [0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, -1, 1],
-    [0, 0, 0, 0, 0, 0, 1],
+    [1, -1, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],

@@ -6,8 +6,8 @@ Generalisation of connect 4 to arbirary board-size and win-length
 
 Classes and functions:
 
-    WinChecker:
-        checks if a board contains a win for either player
+    StatusChecker:
+        checks if a board contains a win for either player, drawn or incomplete
 
     Game:
         tracks the state of moves in a game
@@ -64,6 +64,7 @@ def parse_input(input_file_path):
         with open(input_file_path, "r") as input_file:
             file_text = input_file.read()
     except:
+        # using assertion-errors so I can print right codes
         raise AssertionError("file error")
     try:
         file_lines = file_text.split("\n")
@@ -71,6 +72,7 @@ def parse_input(input_file_path):
         moves = file_lines[1:]
         return game_dimensions, moves
     except:
+        # using assertion-errors so I can print right codes
         raise AssertionError("invalid file")
 
 
@@ -127,8 +129,8 @@ def build_masks(i, j, win_length):
     These indexes will be checked if they are all 1/-1
 
     Args:
-        i (int): starting index
-        j (int): starting index
+        i (int): starting column index
+        j (int): starting row index
         win_length (int): length of sequence needed to win
     """
     right_mask = [[i, j + n] for n in range(win_length)]
@@ -138,7 +140,7 @@ def build_masks(i, j, win_length):
     return [right_mask, down_mask, diagonal_mask, inverse_diagonal_mask]
 
 
-class WinChecker:
+class StatusChecker:
     """
     Checks if a game-board is won/drawn/incomplete
 
@@ -164,8 +166,8 @@ class WinChecker:
         contains a win for either player
 
         Args:
-            i (int): subboard starting index
-            j (int): subboard starting index
+            i (int): subboard starting column index
+            j (int): subboard starting row index
             board (list): board to check
         """
 
@@ -194,10 +196,15 @@ class WinChecker:
         Returns:
             board_state (string): is board a win for either player, draw, or incomplete?
         """
+        # find the columns with the most counters in.
+        # The board above this can be discarded, since it contains only zeros.
+        highest_non_zero = max((sum((abs(x) for x in c)) for c in board))
+        filtered_board = [row[0:highest_non_zero] for row in board]
+
         # check all cells
         for i in range(self.columns):
-            for j in range(self.rows):
-                square_state = self._square_contains_win(i, j, board)
+            for j in range(highest_non_zero):
+                square_state = self._square_contains_win(i, j, filtered_board)
                 # early return winners
                 if square_state != "incomplete":
                     return square_state
@@ -211,7 +218,7 @@ class WinChecker:
 
 class Game:
     """
-    Class tracking Connect-Z Game
+    Class tracking state of Connect-Z Game
 
     Args:
         rows (int): number of rows in board
@@ -232,8 +239,8 @@ class Game:
         self.status = "incomplete"
         self.turn = 1
         # track point in each column we will enter counter (bottom-row up)
-        self.column_counters = [rows - 1 for x in range(columns)]
-        self.win_checker = WinChecker(rows=rows, columns=columns, win_length=win_length)
+        self.column_counters = [0 for x in range(columns)]
+        self.status_checker = StatusChecker(rows=rows, columns=columns, win_length=win_length)
 
     def _validate_move(self, selected_col):
         """
@@ -244,12 +251,18 @@ class Game:
         """
         assert selected_col >= 0, "illegal column"
         assert selected_col < self.columns, "illegal column"
-        assert self.column_counters[selected_col] > -1, "illegal row"
+        assert self.column_counters[selected_col] < self.rows, "illegal row"
         assert not (self.status in ["player 1 win", "player 2 win"]), "illegal continue"
         return True
 
     def make_move(self, selected_col):
         """
+        Makes a move, updating self.board
+
+        Each column is represented by a list, filled up index zero onwards
+
+        The player 1/2 to play is represented by turn = +1/-1
+
         Args:
             selected_col (int): column to place counter NOTE - zero indexed
 
@@ -258,9 +271,9 @@ class Game:
         """
         self._validate_move(selected_col)
         self.board[selected_col][self.column_counters[selected_col]] = self.turn
-        self.status = self.win_checker.check(self.board)
+        self.status = self.status_checker.check(self.board)
         # next move in column one position higher
-        self.column_counters[selected_col] -= 1
+        self.column_counters[selected_col] += 1
         # next move other player (1/-1)
         self.turn *= -1
         return self.status
@@ -269,8 +282,10 @@ class Game:
         """
         Helper method to print out board
         """
-        # transposes because I am using lists to represent columns, to make moving easie
-        transposed_board = map(list, zip(*self.board))
+        # flips and transposes because lists represent columns, to make moving easier
+        # but want to show different orientation when printing
+        flipped_board = [columm[::-1] for columm in self.board]
+        transposed_board = map(list, zip(*flipped_board))
         for row in transposed_board:
             print(row)
 

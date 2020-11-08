@@ -129,7 +129,7 @@ def test_win_check_empty_board():
     """
     Empty board should be incomplete game-state
     """
-    win_checker = connectz.WinChecker(5, 5, 3)
+    win_checker = connectz.StatusChecker(5, 5, 3)
     test_board = [[0 for x in range(5)] for y in range(5)]
     assert win_checker.check(test_board) == "incomplete"
 
@@ -138,7 +138,7 @@ def test_win_check_single_move():
     """
     Single move should be incomplete game-state
     """
-    win_checker = connectz.WinChecker(5, 5, 3)
+    win_checker = connectz.StatusChecker(5, 5, 3)
     test_board = [[0 for x in range(5)] for y in range(5)]
     test_board[0][0] = 1
     assert win_checker.check(test_board) == "incomplete"
@@ -148,11 +148,11 @@ def test_win_check_vertical():
     """
     Check win_checker identifies vertical wins
     """
-    win_checker = connectz.WinChecker(5, 6, 3)
+    win_checker = connectz.StatusChecker(5, 6, 3)
     test_board = [[0 for x in range(5)] for y in range(6)]
-    test_board[1][1] = 1
-    test_board[1][2] = 1
-    test_board[1][3] = 1
+    test_board[3][0] = 1
+    test_board[3][1] = 1
+    test_board[3][2] = 1
     assert win_checker.check(test_board) == "player 1 win"
 
 
@@ -160,11 +160,11 @@ def test_win_check_horizonal():
     """
     Check win_checker identifies horizontal wins
     """
-    win_checker = connectz.WinChecker(5, 6, 3)
+    win_checker = connectz.StatusChecker(5, 6, 3)
     test_board = [[0 for x in range(5)] for y in range(6)]
-    test_board[2][1] = -1
-    test_board[3][1] = -1
-    test_board[4][1] = -1
+    test_board[2][0] = -1
+    test_board[3][0] = -1
+    test_board[4][0] = -1
     assert win_checker.check(test_board) == "player 2 win"
 
 
@@ -172,11 +172,11 @@ def test_win_check_vertical_2():
     """
     Check win_checker identifies vertical wins (2)
     """
-    wc = connectz.WinChecker(5, 4, 3)
+    wc = connectz.StatusChecker(5, 4, 3)
     t = [[0 for x in range(5)] for y in range(4)]
+    t[1][0] = 1
     t[1][1] = 1
     t[1][2] = 1
-    t[1][3] = 1
     wc.check(t)
     assert wc.check(t) == "player 1 win"
 
@@ -185,10 +185,11 @@ def test_win_check_diagonal():
     """
     Check win_checker identifies diagonal wins
     """
-    wc = connectz.WinChecker(9, 6, 2)
+    wc = connectz.StatusChecker(9, 6, 2)
     t = [[0 for x in range(9)] for y in range(6)]
-    t[1][1] = 1
-    t[2][2] = 1
+    t[1][0] = 1
+    t[2][0] = -1
+    t[2][1] = 1
     wc.check(t)
     assert wc.check(t) == "player 1 win"
 
@@ -197,12 +198,14 @@ def test_win_check_diagonal_2():
     """
     Check win_checker identifies diagonal wins (2)
     """
-    wc = connectz.WinChecker(10, 8, 4)
+    wc = connectz.StatusChecker(10, 8, 3)
     t = [[0 for x in range(7)] for y in range(6)]
-    t[4][3] = -1
-    t[3][4] = -1
-    t[2][5] = -1
-    t[1][6] = -1
+    t[4][0] = -1
+    t[3][0] = 1
+    t[3][1] = -1
+    t[2][0] = 1
+    t[2][1] = -1
+    t[2][2] = -1
     wc.check(t)
     assert wc.check(t) == "player 2 win"
 

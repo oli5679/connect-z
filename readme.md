@@ -122,11 +122,16 @@ On my computer, it takes c. 20s to make 6 moves on a large board (500x500)
 
 Profiling the code, a majority of the time is spent on the '_square_contains_win' logic, checking if square contains a win for either player. See simple analysis in scratchpad.ipynb.
 
-I already added some attempts to speed this up, returning early if a win is found, and caching the creation of the 'masks' since this will be the same every move.
+I already added some attempts to speed this up:
+
+- returning early if a win is found
+- caching the creation of the 'masks' since this will be the same every move.
+
+the largest speedup for large boards, without many moves, came from removing the top portion of the board, above the highest counter, before checking for wins.
 
 If I was allowed to use numpy, I would consider:
     - using np.sum and np.trace to get totals of rows columns and diagonals
-    - stripping out portions of the top/bottom/left right of board that contain only zeros
+    - stripping out portions of the top/bottom/left/right of board that contain only zeros
     - doing win-checks on subsections of the board, and using caching to avoid repeating analysis of identical subsections
 
 There are probably also cleverer approaches than this to increase efficiency! If I had more time, I would consider this further.
